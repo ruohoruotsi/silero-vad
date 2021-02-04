@@ -1,6 +1,6 @@
-[![Mailing list : test](http://img.shields.io/badge/Email-gray.svg?style=for-the-badge&logo=gmail)](mailto:hello@silero.ai) [![Mailing list : test](http://img.shields.io/badge/Telegram-blue.svg?style=for-the-badge&logo=telegram)](https://t.me/joinchat/Bv9tjhpdXTI22OUgpOIIDg) [![License: CC BY-NC 4.0](https://img.shields.io/badge/License-MIT-lightgrey.svg?style=for-the-badge)](https://github.com/snakers4/silero-vad/blob/master/LICENSE) 
+[![Mailing list : test](http://img.shields.io/badge/Email-gray.svg?style=for-the-badge&logo=gmail)](mailto:hello@silero.ai) [![Mailing list : test](http://img.shields.io/badge/Telegram-blue.svg?style=for-the-badge&logo=telegram)](https://t.me/silero_speech) [![License: CC BY-NC 4.0](https://img.shields.io/badge/License-MIT-lightgrey.svg?style=for-the-badge)](https://github.com/snakers4/silero-vad/blob/master/LICENSE) 
  
-[![Open on Torch Hub](https://img.shields.io/badge/Torch-Hub-red?logo=pytorch&style=for-the-badge)](https://pytorch.org/hub/snakers4_silero-vad/) (coming soon)
+[![Open on Torch Hub](https://img.shields.io/badge/Torch-Hub-red?logo=pytorch&style=for-the-badge)](https://pytorch.org/hub/snakers4_silero-vad_vad/)
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/snakers4/silero-vad/blob/master/silero-vad.ipynb)
 
@@ -14,6 +14,7 @@
     - [Performance Metrics](#performance-metrics)
     - [VAD Quality Metrics](#vad-quality-metrics)
   - [FAQ](#faq)
+    - [Tuning VAD](#vad-parameter-fine-tuning)
     - [How VAD Works](#how-vad-works)
     - [VAD Quality Metrics Methodology](#vad-quality-metrics-methodology)
     - [How Number Detector Works](#how-number-detector-works)
@@ -24,7 +25,7 @@
 
 
 # Silero VAD
-![image](https://user-images.githubusercontent.com/36505480/105179755-5eafbd00-5b32-11eb-963d-1eb7461144fb.png)
+![image](https://user-images.githubusercontent.com/12515440/106419932-a7d50a80-646a-11eb-8f2b-00b454ed9b98.png)
 
 **Silero VAD: pre-trained enterprise-grade Voice Activity Detector (VAD), Number Detector and Language Classifier.**
 Enterprise-grade Speech Products made refreshingly simple (see our [STT](https://github.com/snakers4/silero-models) models).
@@ -73,9 +74,9 @@ Currently we provide the following functionality:
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/snakers4/silero-vad/blob/master/silero-vad.ipynb)
 
-[![Open on Torch Hub](https://img.shields.io/badge/Torch-Hub-red?logo=pytorch&style=for-the-badge)](https://pytorch.org/hub/snakers4_silero-vad/) (coming soon)
-
 #### VAD
+
+[![Open on Torch Hub](https://img.shields.io/badge/Torch-Hub-red?logo=pytorch&style=for-the-badge)](https://pytorch.org/hub/snakers4_silero-vad_vad/)
 
 ```python
 import torch
@@ -102,6 +103,8 @@ pprint(speech_timestamps)
 
 #### Number Detector
 
+[![Open on Torch Hub](https://img.shields.io/badge/Torch-Hub-red?logo=pytorch&style=for-the-badge)](https://pytorch.org/hub/snakers4_silero-vad_number/)
+
 ```python
 import torch
 torch.set_num_threads(1)
@@ -126,6 +129,8 @@ pprint(number_timestamps)
 ```
 
 #### Language Classifier
+
+[![Open on Torch Hub](https://img.shields.io/badge/Torch-Hub-red?logo=pytorch&style=for-the-badge)](https://pytorch.org/hub/snakers4_silero-vad_language/)
 
 ```python
 import torch
@@ -310,7 +315,7 @@ Since our VAD (only VAD, other networks are more flexible) was trained on chunks
 
 [Auditok](https://github.com/amsehili/auditok) - logic same as Webrtc, but we use 50ms frames.
 
-![image](https://user-images.githubusercontent.com/36505480/105179755-5eafbd00-5b32-11eb-963d-1eb7461144fb.png)
+![image](https://user-images.githubusercontent.com/12515440/106419932-a7d50a80-646a-11eb-8f2b-00b454ed9b98.png)
 
 ## FAQ
 
@@ -322,6 +327,25 @@ Since our VAD (only VAD, other networks are more flexible) was trained on chunks
 - `neg_trig_sum` - same as `trig_sum`, but for switching from triggered to non-triggered state (non-speech)
 - `num_steps` - nubmer of overlapping windows to split audio chunk into (we recommend 4 or 8)
 - `num_samples_per_window` - number of samples in each window, our models were trained using `4000` samples (250 ms) per window, so this is preferable value (lesser values reduce [quality](https://github.com/snakers4/silero-vad/issues/2#issuecomment-750840434));
+- `min_speech_samples` - minimum speech chunk duration in samples
+
+Optimal parameters may vary per domain, but we provided a tiny tool to learn the best parameters. You can invoke `speech_timestamps` with visualize_probs=True (`pandas` required):
+
+```
+speech_timestamps = get_speech_ts(wav, model,
+                                  num_samples_per_window=4000,
+                                  num_steps=4,
+                                  visualize_probs=True)
+```
+
+The chart should looks something like this:
+
+![image](https://user-images.githubusercontent.com/12515440/106242896-79142580-6219-11eb-9add-fa7195d6fd26.png)
+
+With this particular example you can try shorter chunks (`num_samples_per_window=1600`), but this results in too much noise:
+
+![image](https://user-images.githubusercontent.com/12515440/106243014-a8c32d80-6219-11eb-8374-969f372807f1.png)
+
 
 ### How VAD Works
 
@@ -353,7 +377,7 @@ Please see [Quality Metrics](#quality-metrics)
 
 ### Get in Touch
 
-Try our models, create an [issue](https://github.com/snakers4/silero-vad/issues/new), start a [discussion](https://github.com/snakers4/silero-vad/discussions/new), join our telegram [chat](https://t.me/joinchat/Bv9tjhpdXTI22OUgpOIIDg), [email](mailto:hello@silero.ai) us.
+Try our models, create an [issue](https://github.com/snakers4/silero-vad/issues/new), start a [discussion](https://github.com/snakers4/silero-vad/discussions/new), join our telegram [chat](https://t.me/silero_speech), [email](mailto:hello@silero.ai) us, read our [news](https://t.me/silero_news).
 
 ### Commercial Inquiries
 
@@ -364,3 +388,4 @@ Please see our [wiki](https://github.com/snakers4/silero-models/wiki) and [tiers
 
 - Russian article - https://habr.com/ru/post/537274/
 - English article - https://habr.com/ru/post/537276/
+- Nice [thread](https://github.com/snakers4/silero-vad/discussions/16#discussioncomment-305830) in discussions
