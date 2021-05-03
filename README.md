@@ -22,10 +22,11 @@
   - [Contact](#contact)
     - [Get in Touch](#get-in-touch)
     - [Commercial Inquiries](#commercial-inquiries)
+  - [Citations](#citations)
 
 
 # Silero VAD
-![image](https://user-images.githubusercontent.com/12515440/106419932-a7d50a80-646a-11eb-8f2b-00b454ed9b98.png)
+![image](https://user-images.githubusercontent.com/36505480/107667211-06cf2680-6c98-11eb-9ee5-37eb4596260f.png)
 
 **Silero VAD: pre-trained enterprise-grade Voice Activity Detector (VAD), Number Detector and Language Classifier.**
 Enterprise-grade Speech Products made refreshingly simple (see our [STT](https://github.com/snakers4/silero-models) models).
@@ -55,11 +56,25 @@ Also in some cases it is crucial to be able to anonymize large-scale spoken corp
 
 The models are small enough to be included directly into this repository. Newer models will supersede older models directly.
 
-Currently we provide the following functionality:
+**Currently we provide the following endpoints:**
 
-| PyTorch           | ONNX               | VAD                 | Number Detector    | Language Clf       | Languages              | Colab |
-|-------------------|--------------------|---------------------|--------------------|--------------------|------------------------|-------| 
-| :heavy_check_mark:| :heavy_check_mark: | :heavy_check_mark:  | :heavy_check_mark: | :heavy_check_mark: | `ru`, `en`, `de`, `es` | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/snakers4/silero-vad/blob/master/silero-vad.ipynb) |
+| model=                        | Params | Model type          | Streaming | Languages      | PyTorch | ONNX | Colab |
+|--------------------------------|--------|---------------------|--------------------|----------------|---------|------|-------| 
+| `'silero_vad'`             | 1.1M   | VAD                 |  Yes       | `ru`, `en`, `de`, `es` (*) | :heavy_check_mark: | :heavy_check_mark:      | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/snakers4/silero-vad/blob/master/silero-vad.ipynb) |
+| `'silero_vad_micro'`             | 10K   | VAD                 |  Yes       | `ru`, `en`, `de`, `es` (*) | :heavy_check_mark: | :heavy_check_mark:      | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/snakers4/silero-vad/blob/master/silero-vad.ipynb) |
+| `'silero_vad_micro_8k'`             | 10K   | VAD                 |  Yes       | `ru`, `en`, `de`, `es` (*) | :heavy_check_mark: | :heavy_check_mark:      | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/snakers4/silero-vad/blob/master/silero-vad.ipynb) |
+| `'silero_vad_mini'`             | 100K   | VAD                 |  Yes       | `ru`, `en`, `de`, `es` (*) | :heavy_check_mark: | :heavy_check_mark:      | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/snakers4/silero-vad/blob/master/silero-vad.ipynb) |
+| `'silero_vad_mini_8k'`             | 100K   | VAD                 |  Yes       | `ru`, `en`, `de`, `es` (*) | :heavy_check_mark: | :heavy_check_mark:      | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/snakers4/silero-vad/blob/master/silero-vad.ipynb) |
+| `'silero_number_detector'` | 1.1M   | Number Detector     | No       | `ru`, `en`, `de`, `es` | :heavy_check_mark: | :heavy_check_mark:      | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/snakers4/silero-vad/blob/master/silero-vad.ipynb) |
+| `'silero_lang_detector'`   | 1.1M   | Language Classifier |  No       | `ru`, `en`, `de`, `es` | :heavy_check_mark: | :heavy_check_mark:      | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/snakers4/silero-vad/blob/master/silero-vad.ipynb) |
+
+(*) Though explicitly trained on these languages, VAD should work on any Germanic, Romance or Slavic Languages out of the box.
+
+What models do:
+
+- VAD - detects speech;
+- Number Detector  - detects spoken numbers (i.e. thirty five);
+- Language Classifier - classifies utterances between language;
 
 **Version history:**
 
@@ -69,10 +84,21 @@ Currently we provide the following functionality:
 | `v1.1`  | 2020-12-24  | better vad models compatible with chunks shorter than 250 ms
 | `v1.2`  | 2020-12-30  | Number Detector added
 | `v2`    | 2021-01-11  | Add Language Classifier heads (en, ru, de, es) |
+| `v2.1`    | 2021-02-11  | Add micro (10k params) VAD models |
+| `v2.2`    | 2021-03-22  | Add micro 8000 sample rate VAD models |
+| `v2.3`    | 2021-04-12  | Add mini (100k params) VAD models (8k and 16k sample rate)  + **new** adaptive utils for full audio and single audio stream|
 
 ### PyTorch
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/snakers4/silero-vad/blob/master/silero-vad.ipynb)
+
+We are keeping the colab examples up-to-date, but you can manually manage your dependencies:
+
+- `pytorch` >= 1.7.1 (there were breaking changes in `torch.hub` introduced in 1.7);
+- `torchaudio` >= 0.7.2 (used only for IO and resampling, can be easily replaced);
+- `soundfile` >= 0.10.3 (used as a default backend for torchaudio, can be replaced);
+
+All of the dependencies except for PyTorch are superficial and for utils / example only. You can use any libraries / pipelines that read files and resample into 16 kHz.
 
 #### VAD
 
@@ -88,6 +114,7 @@ model, utils = torch.hub.load(repo_or_dir='snakers4/silero-vad',
                               force_reload=True)
 
 (get_speech_ts,
+ get_speech_ts_adaptive,
  _, read_audio,
  _, _, _) = utils
 
@@ -96,8 +123,14 @@ files_dir = torch.hub.get_dir() + '/snakers4_silero-vad_master/files'
 wav = read_audio(f'{files_dir}/en.wav')
 # full audio
 # get speech timestamps from full audio file
+
+# classic way
 speech_timestamps = get_speech_ts(wav, model,
                                   num_steps=4)
+pprint(speech_timestamps)
+
+# adaptive way
+speech_timestamps = get_speech_ts_adaptive(wav, model)
 pprint(speech_timestamps)
 ```
 
@@ -169,6 +202,7 @@ _, utils = torch.hub.load(repo_or_dir='snakers4/silero-vad',
                               force_reload=True)
 
 (get_speech_ts,
+ get_speech_ts_adaptive,
  _, read_audio,
  _, _, _) = utils
 
@@ -182,13 +216,19 @@ def validate_onnx(model, inputs):
         ort_inputs = {'input': inputs.cpu().numpy()}
         outs = model.run(None, ort_inputs)
         outs = [torch.Tensor(x) for x in outs]
-    return outs
+    return outs[0]
     
 model = init_onnx_model(f'{files_dir}/model.onnx')
 wav = read_audio(f'{files_dir}/en.wav')
 
 # get speech timestamps from full audio file
+
+# classic way
 speech_timestamps = get_speech_ts(wav, model, num_steps=4, run_function=validate_onnx) 
+pprint(speech_timestamps)
+
+# adaptive way
+speech_timestamps = get_speech_ts(wav, model, run_function=validate_onnx) 
 pprint(speech_timestamps)
 ```
 
@@ -311,16 +351,19 @@ We use random 250 ms audio chunks for validation. Speech to non-speech ratio amo
 
 Since our VAD (only VAD, other networks are more flexible) was trained on chunks of the same length, model's output is just one float from 0 to 1 - **speech probability**. We use speech probabilities as thresholds for precision-recall curve. This can be extended to 100 - 150 ms. Less than 100 - 150 ms cannot be distinguished as speech with confidence.
 
-[Webrtc](https://github.com/wiseman/py-webrtcvad) splits audio into frames, each frame has corresponding number (0 **or** 1). We use 30ms frames for webrtc, so each 250 ms chunk is split into 8 frames, their **mean** value is used as a treshold for plot.
+[Webrtc](https://github.com/wiseman/py-webrtcvad) splits audio into frames, each frame has corresponding number (0 **or** 1). We use 30ms frames for webrtc, so each 250 ms chunk is split into 8 frames, their **mean** value is used as a threshold for plot.
 
 [Auditok](https://github.com/amsehili/auditok) - logic same as Webrtc, but we use 50ms frames.
 
-![image](https://user-images.githubusercontent.com/12515440/106419932-a7d50a80-646a-11eb-8f2b-00b454ed9b98.png)
+![image](https://user-images.githubusercontent.com/36505480/107667211-06cf2680-6c98-11eb-9ee5-37eb4596260f.png)
 
 ## FAQ
 
 ### VAD Parameter Fine Tuning
 
+#### **Classic way**
+
+**This is straightforward classic method `get_speech_ts` where thresholds (`trig_sum` and `neg_trig_sum`) are specified by users**
 - Among others, we provide several [utils](https://github.com/snakers4/silero-vad/blob/8b28767292b424e3e505c55f15cd3c4b91e4804b/utils.py#L52-L59) to simplify working with VAD;
 - We provide sensible basic hyper-parameters that work for us, but your case can be different;
 - `trig_sum` - overlapping windows are used for each audio chunk, trig sum defines average probability among those windows for switching into triggered state (speech state);
@@ -328,6 +371,7 @@ Since our VAD (only VAD, other networks are more flexible) was trained on chunks
 - `num_steps` - nubmer of overlapping windows to split audio chunk into (we recommend 4 or 8)
 - `num_samples_per_window` - number of samples in each window, our models were trained using `4000` samples (250 ms) per window, so this is preferable value (lesser values reduce [quality](https://github.com/snakers4/silero-vad/issues/2#issuecomment-750840434));
 - `min_speech_samples` - minimum speech chunk duration in samples
+- `min_silence_samples` - minimum silence duration in samples between to separate speech chunks
 
 Optimal parameters may vary per domain, but we provided a tiny tool to learn the best parameters. You can invoke `speech_timestamps` with visualize_probs=True (`pandas` required):
 
@@ -337,6 +381,24 @@ speech_timestamps = get_speech_ts(wav, model,
                                   num_steps=4,
                                   visualize_probs=True)
 ```
+
+#### **Adaptive way**
+
+**Adaptive algorithm (`get_speech_ts_adaptive`) automatically selects thresholds (`trig_sum` and `neg_trig_sum`) based on median speech probabilities over the whole audio, SOME ARGUMENTS VARY FROM THE CLASSIC WAY FUNCTION ARGUMENTS**
+- `batch_size` - batch size to feed to silero VAD (default - `200`)
+- `step` - step size in samples, (default - `500`) (`num_samples_per_window` / `num_steps` from classic method)
+- `num_samples_per_window` -  number of samples in each window, our models were trained using `4000` samples (250 ms) per window, so this is preferable value (lesser values reduce [quality](https://github.com/snakers4/silero-vad/issues/2#issuecomment-750840434));
+- `min_speech_samples` - minimum speech chunk duration in samples (default - `10000`)
+- `min_silence_samples` - minimum silence duration in samples between to separate speech chunks (default - `4000`)
+- `speech_pad_samples` - widen speech by this amount of samples each side (default - `2000`)
+
+```
+speech_timestamps = get_speech_ts_adaptive(wav, model,
+                                  num_samples_per_window=4000,
+                                  step=500,
+                                  visualize_probs=True)
+```
+
 
 The chart should looks something like this:
 
@@ -363,7 +425,7 @@ Please see [Quality Metrics](#quality-metrics)
 ### How Number Detector Works
 
 - It is recommended to split long audio into short ones (< 15s) and apply model on each of them;
-- Number Detector can classify if whole audio contains a number, or if each audio frame contains a number;
+- Number Detector can classify if the whole audio contains a number, or if each audio frame contains a number;
 - Audio is splitted into frames in a certain way, so, having a per-frame output, we can restore timing bounds for a numbers with an accuracy of about 0.2s;
 
 ### How Language Classifier Works
@@ -389,3 +451,18 @@ Please see our [wiki](https://github.com/snakers4/silero-models/wiki) and [tiers
 - Russian article - https://habr.com/ru/post/537274/
 - English article - https://habr.com/ru/post/537276/
 - Nice [thread](https://github.com/snakers4/silero-vad/discussions/16#discussioncomment-305830) in discussions
+
+## Citations
+
+```
+@misc{Silero VAD,
+  author = {Silero Team},
+  title = {Silero VAD: pre-trained enterprise-grade Voice Activity Detector (VAD), Number Detector and Language Classifier},
+  year = {2021},
+  publisher = {GitHub},
+  journal = {GitHub repository},
+  howpublished = {\url{https://github.com/snakers4/silero-vad}},
+  commit = {insert_some_commit_here},
+  email = {hello@silero.ai}
+}
+```
