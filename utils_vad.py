@@ -203,6 +203,8 @@ def get_speech_ts_adaptive(wav: torch.Tensor,
     speeches: list
         list containing ends and beginnings of speech chunks (in samples)
     """
+    if visualize_probs:
+      import pandas as pd    
 
     num_samples = num_samples_per_window
     num_steps = int(num_samples / step)
@@ -268,9 +270,18 @@ def get_speech_ts_adaptive(wav: torch.Tensor,
     if visualize_probs:
         pd.DataFrame({'probs': smoothed_probs}).plot(figsize=(16, 8))
 
-    for ts in speeches:
-        ts['start'] = max(0, ts['start'] - speech_pad_samples)
-        ts['end'] += speech_pad_samples
+    for i, ts in enumerate(speeches):
+        if i == 0:
+            ts['start'] = max(0, ts['start'] - speech_pad_samples)
+        if i != len(speeches) - 1:
+            silence_duration = speeches[i+1]['start'] - ts['end']
+            if silence_duration < 2 * speech_pad_samples:
+                ts['end'] += silence_duration // 2
+                speeches[i+1]['start'] = max(0, speeches[i+1]['start'] - silence_duration // 2)
+            else:
+                ts['end'] += speech_pad_samples
+        else:
+            ts['end'] = min(len(wav), ts['end'] + speech_pad_samples)
 
     return speeches
 
@@ -316,6 +327,32 @@ def get_language(wav: torch.Tensor,
     lang_pred = torch.argmax(torch.softmax(lang_logits, dim=1), dim=1).item()   # from 0 to len(languages) - 1
     assert lang_pred < len(languages)
     return languages[lang_pred]
+
+
+def get_language_and_group(wav: torch.Tensor,
+                           model,
+                           lang_dict: dict,
+                           lang_group_dict: dict,
+                           top_n=1,
+                           run_function=validate):
+    wav = torch.unsqueeze(wav, dim=0)
+    lang_logits, lang_group_logits = run_function(model, wav)
+    
+    softm = torch.softmax(lang_logits, dim=1).squeeze()
+    softm_group = torch.softmax(lang_group_logits, dim=1).squeeze()
+    
+    srtd = torch.argsort(softm, descending=True)
+    srtd_group = torch.argsort(softm_group, descending=True)
+    
+    outs = []
+    outs_group = []
+    for i in range(top_n):
+        prob = round(softm[srtd[i]].item(), 2)
+        prob_group = round(softm_group[srtd_group[i]].item(), 2)
+        outs.append((lang_dict[str(srtd[i].item())], prob))
+        outs_group.append((lang_group_dict[str(srtd_group[i].item())], prob_group))
+
+    return outs, outs_group
 
 
 class VADiterator:
