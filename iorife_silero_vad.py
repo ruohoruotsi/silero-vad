@@ -17,6 +17,12 @@ model, utils = torch.hub.load(repo_or_dir='/Users/iorife/github/silero-vad/',
                               source='local',
                               force_reload=True,
                               onnx=False)
+
+# model, utils = torch.hub.load(repo_or_dir='snakers4/silero-vad',
+#                               model='silero_vad',
+#                               force_reload=True,
+#                               onnx=False)
+
 print("VAD model loading --- %s seconds ---" % (time.time() - start_time))
 (get_speech_timestamps, _, read_audio, _, _) = utils
 
@@ -84,7 +90,7 @@ if __name__ == "__main__":
     timestamps = vad_audio(weeds_path)
     # segment_original_audiofile(timestamps, weeds_path)
 
-    results_file_root = "/Users/iorife/stash/speech_activity_lang_id_experiments/evaluation_results/netflix_catalog.medium.en_sad_silero/"
+    results_file_root = "/tmp/netflix_catalog.medium.en_sad_silero/"
     basename, ext = os.path.splitext(os.path.basename(weeds_path))
     with open(results_file_root + basename + ".silero.txt", 'w') as file:
         file.write(json.dumps(timestamps))
