@@ -1,30 +1,52 @@
 dependencies = ['torch', 'torchaudio']
 import torch
-import json
-from utils_vad import (init_jit_model,
-                       get_speech_timestamps,
-                       get_number_ts,
-                       get_language,
-                       get_language_and_group,
-                       save_audio,
-                       read_audio,
-                       VADIterator,
-                       collect_chunks,
-                       drop_chunks,
-                       Validator,
-                       OnnxWrapper)
+import os
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
+from silero_vad.utils_vad import (init_jit_model,
+                                  get_speech_timestamps,
+                                  save_audio,
+                                  read_audio,
+                                  VADIterator,
+                                  collect_chunks,
+                                  OnnxWrapper)
 
 
-def silero_vad(onnx=False):
+def versiontuple(v):
+    splitted = v.split('+')[0].split(".")
+    version_list = []
+    for i in splitted:
+        try:
+            version_list.append(int(i))
+        except:
+            version_list.append(0)
+    return tuple(version_list)
+
+
+def silero_vad(onnx=False, force_onnx_cpu=False, opset_version=16):
     """Silero Voice Activity Detector
     Returns a model with a set of utils
     Please see https://github.com/snakers4/silero-vad for usage examples
     """
-    hub_dir = torch.hub.get_dir()
+    available_ops = [15, 16]
+    if onnx and opset_version not in available_ops:
+        raise Exception(f'Available ONNX opset_version: {available_ops}')
+
+    if not onnx:
+        installed_version = torch.__version__
+        supported_version = '1.12.0'
+        if versiontuple(installed_version) < versiontuple(supported_version):
+            raise Exception(f'Please install torch {supported_version} or greater ({installed_version} installed)')
+
+    model_dir = os.path.join(os.path.dirname(__file__), 'src', 'silero_vad', 'data')
     if onnx:
-        model = OnnxWrapper(f'{hub_dir}/snakers4_silero-vad_master/files/silero_vad.onnx')
+        if opset_version == 16:
+            model_name = 'silero_vad.onnx'
+        else:
+            model_name = f'silero_vad_16k_op{opset_version}.onnx'
+        model = OnnxWrapper(os.path.join(model_dir, model_name), force_onnx_cpu)
     else:
-        model = init_jit_model(model_path=f'{hub_dir}/snakers4_silero-vad_master/files/silero_vad.jit')
+        model = init_jit_model(os.path.join(model_dir, 'silero_vad.jit'))
     utils = (get_speech_timestamps,
              save_audio,
              read_audio,
@@ -32,62 +54,3 @@ def silero_vad(onnx=False):
              collect_chunks)
 
     return model, utils
-
-
-def silero_number_detector(onnx=False):
-    """Silero Number Detector
-    Returns a model with a set of utils
-    Please see https://github.com/snakers4/silero-vad for usage examples
-    """
-    if onnx:
-        url = 'https://models.silero.ai/vad_models/number_detector.onnx'
-    else:
-        url = 'https://models.silero.ai/vad_models/number_detector.jit'
-    model = Validator(url)
-    utils = (get_number_ts,
-             save_audio,
-             read_audio,
-             collect_chunks,
-             drop_chunks)
-
-    return model, utils
-
-
-def silero_lang_detector(onnx=False):
-    """Silero Language Classifier
-    Returns a model with a set of utils
-    Please see https://github.com/snakers4/silero-vad for usage examples
-    """
-    if onnx:
-        url = 'https://models.silero.ai/vad_models/number_detector.onnx'
-    else:
-        url = 'https://models.silero.ai/vad_models/number_detector.jit'
-    model = Validator(url)
-    utils = (get_language,
-             read_audio)
-
-    return model, utils
-
-
-def silero_lang_detector_95(onnx=False):
-    """Silero Language Classifier (95 languages)
-    Returns a model with a set of utils
-    Please see https://github.com/snakers4/silero-vad for usage examples
-    """
-
-    hub_dir = torch.hub.get_dir()
-    if onnx:
-        url = 'https://models.silero.ai/vad_models/lang_classifier_95.onnx'
-    else:
-        url = 'https://models.silero.ai/vad_models/lang_classifier_95.jit'
-    model = Validator(url)
-
-    with open(f'{hub_dir}/snakers4_silero-vad_master/files/lang_dict_95.json', 'r') as f:
-        lang_dict = json.load(f)
-
-    with open(f'{hub_dir}/snakers4_silero-vad_master/files/lang_group_dict_95.json', 'r') as f:
-        lang_group_dict = json.load(f)
-
-    utils = (get_language_and_group, read_audio)
-
-    return model, lang_dict, lang_group_dict, utils
